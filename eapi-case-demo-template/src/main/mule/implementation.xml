@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="patchCase" doc:id="9ce01b6c-5996-4859-a882-6a4070c9ece6" >
+		<until-successful maxRetries="1" doc:name="Until Successful" doc:id="6bd44297-65b1-422e-9aa6-2b8f24ff74e9" millisBetweenRetries="1000">
+			<try doc:name="Try" doc:id="ec976323-d5c9-4c2d-9c82-b09a4c4a97b5">
+			<http:request method="PATCH" doc:name="PATCH Request to PAPI" doc:id="adac9b95-565f-4142-ad59-4412935445c8" config-ref="http-request-configuration" path="/api/cases/{id}">
+			<http:uri-params><![CDATA[#[output application/java
+---
+{
+	id : attributes.uriParams.id
+}]]]></http:uri-params>
+		</http:request>
+			<error-handler>
+				<on-error-continue enableNotifications="false" logException="false" doc:name="On Error Continue" doc:id="67388e1a-f0b3-4558-9ba0-201f77c54502" type="HTTP:BAD_GATEWAY, HTTP:BAD_REQUEST, HTTP:CLIENT_SECURITY, HTTP:FORBIDDEN, HTTP:INTERNAL_SERVER_ERROR, HTTP:METHOD_NOT_ALLOWED, HTTP:NOT_ACCEPTABLE, HTTP:NOT_FOUND, HTTP:PARSING, HTTP:RETRY_EXHAUSTED, HTTP:SECURITY, HTTP:TOO_MANY_REQUESTS, HTTP:UNAUTHORIZED, HTTP:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error message" doc:id="8bc7c9a9-d254-4bec-8eb6-ef959913f870">
+						<ee:message />
+						<ee:variables>
+							<ee:set-variable resource="dwl/errorMessage.dwl" variableName="errorMessage" />
+						</ee:variables>
+					</ee:transform>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		</until-successful>
+		<choice doc:name="ErrorCheck?" doc:id="46f8aaba-0db3-4b4c-b073-97b557db7c5d" >
+			<when expression="#[vars.errorMessage != null]">
+				<set-variable value="#[vars.errorMessage.StatusCode]" doc:name="httpStatus" doc:id="f4fe8f0c-a629-49f4-8a2d-5e1def3b62e6" variableName="httpStatus" />
+				<logger level="INFO" doc:name="errorMessage" doc:id="2a823db1-c822-4ce9-9f4b-e1221a155d55" message="#[vars.errorMessage]" />
+				<set-payload value="#[vars.errorMessage]" doc:name="errorMessage passing " doc:id="2fae48df-17e9-445d-9fbc-f81c869e17ca" />
+			</when>
+		</choice>
+	</flow>
+	<flow name="getCase" doc:id="f8fcb8c7-6746-4fda-b4e8-c8b91079782c" >
+		<until-successful maxRetries="1" doc:name="Until Successful" doc:id="b4014ab9-6d87-4077-9877-bff29d9536e8" millisBetweenRetries="1000">
+			<try doc:name="Try" doc:id="2f67c3e8-1af0-43a7-a446-871403d5cb97" >
+				<http:request method="GET" doc:name="GET Request to PAPI" doc:id="87b21ff1-4cf2-4e3c-a844-2ab212cc5cc9" config-ref="http-request-configuration" path="/api/cases/{id}">
+			<http:uri-params><![CDATA[#[output application/java
+---
+{
+	id : attributes.uriParams.id
+}]]]></http:uri-params>
+		</http:request>
+				<error-handler >
+					<on-error-continue enableNotifications="false" logException="false" doc:name="On Error Continue" doc:id="1b45a23f-18d2-47d7-8ccc-cde3e624c097" type="HTTP:BAD_GATEWAY, HTTP:BAD_REQUEST, HTTP:CLIENT_SECURITY, HTTP:FORBIDDEN, HTTP:INTERNAL_SERVER_ERROR, HTTP:METHOD_NOT_ALLOWED, HTTP:NOT_ACCEPTABLE, HTTP:NOT_FOUND, HTTP:PARSING, HTTP:RETRY_EXHAUSTED, HTTP:SECURITY, HTTP:TOO_MANY_REQUESTS, HTTP:UNAUTHORIZED, HTTP:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+						<ee:transform doc:name="Error message" doc:id="7d29c129-3e5f-467b-8f0e-5a9219dabe5a" >
+							<ee:message />
+							<ee:variables >
+								<ee:set-variable resource="dwl/errorMessage.dwl" variableName="errorMessage" />
+							</ee:variables>
+						</ee:transform>
+					</on-error-continue>
+				</error-handler>
+			</try>
+			<choice doc:name="ErrorCheck?" doc:id="48041383-a3fa-48d6-b029-d4314e2fcc58" >
+				<when expression="#[vars.errorMessage != null]">
+					<set-variable value="#[vars.errorMessage.StatusCode]" doc:name="httpStatus" doc:id="26592623-174c-4e92-8215-9117b45675cb" variableName="httpStatus" />
+					<logger level="INFO" doc:name="errorMessage" doc:id="ea4489b5-d59e-42e9-b8ed-54d6d0dfdb3b" message="#[vars.errorMessage]" />
+					<set-payload value="#[vars.errorMessage]" doc:name="errorMessage passing " doc:id="011f10ef-a1d3-484c-becc-290c4baf72f1" />
+				</when>
+			</choice>
+		</until-successful>
+	</flow>
+	<flow name="postCase" doc:id="cb930150-70fd-428a-915b-4bd4abee9df4" >
+		<until-successful maxRetries="1" doc:name="Until Successful" doc:id="c4d17be0-69b6-4cc9-8953-2cd74bedfc8f" millisBetweenRetries="1000">
+			<try doc:name="Try" doc:id="278c6670-e43c-44a3-88c0-1ee439b9fdc9">
+			<http:request method="POST" doc:name="POST Request to PAPI" doc:id="31d627b8-9ba5-4b5f-816c-72494a1ab29b" config-ref="http-request-configuration" path="/api/cases">
+		</http:request>
+			<error-handler>
+				<on-error-continue enableNotifications="false" logException="false" doc:name="On Error Continue" doc:id="8e0f7bbd-960c-41d1-9d05-0497ea55395e" type="HTTP:BAD_GATEWAY, HTTP:BAD_REQUEST, HTTP:CLIENT_SECURITY, HTTP:FORBIDDEN, HTTP:INTERNAL_SERVER_ERROR, HTTP:METHOD_NOT_ALLOWED, HTTP:NOT_ACCEPTABLE, HTTP:NOT_FOUND, HTTP:PARSING, HTTP:RETRY_EXHAUSTED, HTTP:SECURITY, HTTP:TOO_MANY_REQUESTS, HTTP:UNAUTHORIZED, HTTP:UNSUPPORTED_MEDIA_TYPE, EXPRESSION, STREAM_MAXIMUM_SIZE_EXCEEDED">
+					<ee:transform doc:name="Error message" doc:id="268af899-5add-49cc-a357-c4b1c8dc070e">
+						<ee:message>
+						</ee:message>
+						<ee:variables>
+							<ee:set-variable resource="dwl/errorMessage.dwl" variableName="errorMessage" />
+						</ee:variables>
+					</ee:transform>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		</until-successful>
+		<choice doc:name="ErrorCheck?" doc:id="2e6c425e-2a7c-460c-8fa5-08f56b8e7553" >
+			<when expression="#[vars.errorMessage != null]">
+				<set-variable value="#[vars.errorMessage.StatusCode]" doc:name="httpStatus" doc:id="eca0f58e-1410-419f-8075-f2d422fdcbfa" variableName="httpStatus" />
+				<logger level="INFO" doc:name="errorMessage" doc:id="af2f0a53-853c-4857-a2d9-699df677b8f1" message="#[vars.errorMessage]" />
+				<set-payload value="#[vars.errorMessage]" doc:name="errorMessage passing " doc:id="832f8b54-f54f-466b-b6c9-1ae01e483029" />
+			</when>
+		</choice>
+	</flow>
+</mule>

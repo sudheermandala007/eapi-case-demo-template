@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	<http:listener-config name="eapi-case-demo-template-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="${http.port}" />
+    </http:listener-config>
+    <http:request-config name="http-request-configuration" doc:name="HTTP Request configuration" doc:id="cdaea750-8f7b-414c-b5a1-3f98707e6f13">
+		<http:request-connection host="${papi-case-demo-template.host}" protocol="HTTPS"/>
+		<http:default-headers >
+			<http:default-header key="client_id" value="${api.clientId}" />
+			<http:default-header key="client_secret" value="${secure::api.clientSecret}" />
+		</http:default-headers>
+	
+</http:request-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="c6d3d26f-eec7-4189-b7c5-7e3d6edb024f" file="properties\config-${mule.env}.yaml" />
+	<global-property doc:name="Global Property" doc:id="5abe8b3b-416e-4e65-bdee-df2187561aae" name="mule.env" value="dev"/>
+	<global-property doc:name="Global Property" doc:id="d9380ceb-ab43-4772-8250-f5604315eff5" name="key" value="1234567812345678" />
+	<configuration doc:name="Configuration" doc:id="53d33259-1bf8-46a9-b43b-42bae5a21c67" defaultErrorHandler-ref="globalError_Handler" />
+	<secure-properties:config name="secure-properties-config" doc:name="Secure Properties Config" doc:id="2b384d0a-fce3-4d6c-9826-399b3a786bb1" file="properties\config-${mule.env}.yaml" key="${key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<api-gateway:autodiscovery apiId="${api.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="a9033630-273f-4a2c-af39-fe2ccd2eae47" flowRef="eapi-case-demo-template-main" />
+	<error-handler name="globalError_Handler" doc:id="81fc7de3-88c3-4fca-afe6-90d370080ec4" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="acf88a72-982a-42ce-9f94-b1e0c55e528d" type="ANY">
+			<ee:transform doc:name="Transform Message" doc:id="1a9b6c23-d74c-45d7-9532-00e029526384">
+				<ee:message>
+					<ee:set-payload resource="dwl/globalErrorMessage.dwl" />
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+	
+</mule>
